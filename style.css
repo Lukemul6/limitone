@@ -7,7 +7,10 @@
   --accent: #1f6fd1;
   --panel: rgba(40, 40, 44, 0.72);
   --secondary: rgba(235, 235, 245, 0.6);
-  --frame-width: min(calc(100vw - 48px), 520px);
+  /* The iPad sidebar. Zero on phones, where everything floats over the camera. */
+  --panel-width: 0px;
+  --camera-width: calc(100vw - var(--panel-width));
+  --frame-width: min(calc(var(--camera-width) - 48px), 520px);
   color-scheme: dark;
 }
 
@@ -29,12 +32,12 @@ button:focus:not(:focus-visible) { outline: none; }
 svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 [hidden] { display: none !important; }
 
-#camera { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+#camera { position: fixed; top: 0; left: 0; bottom: 0; width: var(--camera-width); height: 100%; object-fit: cover; background: #000; }
 
 /* The scan frame: everything outside it is dimmed. */
 .frame {
   position: fixed;
-  left: 50%;
+  left: calc(var(--camera-width) / 2);
   top: 42%;
   width: var(--frame-width);
   aspect-ratio: 100 / 62;
@@ -51,7 +54,7 @@ svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width:
 
 .hint {
   position: fixed;
-  left: 0; right: 0;
+  left: 0; right: var(--panel-width);
   top: calc(42% + var(--frame-width) * 0.31 + 16px);
   margin: 0;
   text-align: center;
@@ -60,11 +63,15 @@ svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width:
 }
 
 .camera-message {
-  position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
+  position: fixed; left: calc(var(--camera-width) / 2); top: 42%; transform: translate(-50%, -50%);
   width: min(90vw, 460px); text-align: center; padding: 24px;
 }
 .camera-message h2 { margin: 0 0 8px; font-size: 24px; }
 .camera-message p { margin: 0; color: var(--secondary); }
+
+/* On phones the panel's parts float over the camera. */
+.panel { display: contents; }
+.panel-title, .recent, .wide-label, .keypad { display: none; }
 
 /* Header and footer float over the camera. */
 .top, .notices, .bottom {
@@ -184,7 +191,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
   background: #1c1c1e;
   -webkit-user-select: text; user-select: text;
 }
-.small-sheet { height: auto; margin: auto auto 0; border-radius: 22px 22px 0 0; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
+.small-sheet { height: fit-content; margin: auto auto 0; border-radius: 22px 22px 0 0; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
 .sheet-bar {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
   padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
@@ -239,3 +246,66 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 .alert-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .alert-button { padding: 12px; border-radius: 999px; background: #3a3a3c; font-weight: 600; color: #4a9eff; }
 .alert-button.red { color: var(--duplicate-bright); }
+
+/* Number pad, shown on iPads (their keyboard has no number pad). */
+.keypad { grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 20px 16px; }
+.keypad button {
+  min-height: 68px; border-radius: 16px; background: #3a3a3c;
+  font: 600 32px ui-rounded, -apple-system, system-ui, sans-serif;
+}
+.keypad button:active { background: #48484a; }
+.keypad .key-word { font-size: 19px; }
+
+/* iPad: camera on the left, a sidebar with the counts, controls and the list on the right. */
+@media (min-width: 700px) {
+  :root { --panel-width: 380px; }
+
+  .panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: var(--panel-width);
+    display: flex; flex-direction: column; gap: 16px;
+    padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px);
+    background: #121212; border-left: 1px solid #2c2c2e;
+  }
+  .panel-title { display: block; font-size: 24px; font-weight: 700; margin-right: 140px; min-height: 40px; line-height: 40px; }
+  .top, .notices, .bottom { position: static; transform: none; width: auto; }
+  .top { padding: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; gap: 12px; flex-wrap: wrap; }
+  .stats { gap: 12px; }
+  .stat { flex: 1; padding: 14px; border-radius: 18px; background: #232325; }
+  .count { font-size: 40px; }
+  .top .round {
+    position: absolute; top: calc(env(safe-area-inset-top) + 20px); right: 20px;
+    width: auto; height: 40px; padding: 0 16px; gap: 8px; border-radius: 999px; display: flex;
+  }
+  .top .round svg { width: 20px; height: 20px; }
+  .wide-label { display: inline; font-weight: 600; }
+  .bottom { gap: 12px; }
+  .controls { flex-wrap: wrap; gap: 12px; }
+  .controls .primary { flex: 1 0 100%; order: -1; }
+  .controls .round {
+    flex: 1; width: auto; height: 46px; border-radius: 999px; display: flex; gap: 8px;
+    align-items: center; justify-content: center;
+    background: #2c2c2e; font-size: 15px;
+  }
+  .controls .round svg { width: 20px; height: 20px; }
+  .last-result { background: #232325; }
+
+  .recent { display: flex; flex-direction: column; flex: 1; min-height: 0; border-top: 1px solid #2c2c2e; padding-top: 14px; }
+  .recent h3 { margin: 0 0 6px; font-size: 17px; color: var(--secondary); }
+  #recent-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #recent-list .entry { padding: 10px 0; }
+  #recent-list .empty { margin-top: 12px; text-align: left; }
+
+  /* Results: as large as fits the height, so they read from across the line. */
+  .result .big-icon { width: min(210px, 20vh); height: min(210px, 20vh); }
+  .result h2 { font-size: min(96px, 9.5vh); }
+  .result p { font-size: min(32px, 3.2vh); }
+  .result .number { font-size: min(64px, 6.2vh); }
+  .result .times { font-size: min(26px, 2.6vh); }
+
+  /* Sheets become centred cards. */
+  .sheet { height: min(90vh, 960px); margin: auto; border-radius: 22px; overflow: hidden; }
+  .sheet-bar { padding-top: 14px; }
+  .sheet-body { height: calc(100% - 64px); }
+  .small-sheet { width: 520px; height: fit-content; margin: auto; border-radius: 22px; padding-bottom: 20px; }
+  .keypad { display: grid; }
+}

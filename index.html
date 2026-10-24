@@ -24,6 +24,8 @@
 <p id="hint" class="hint">Line up the barcode or QR code</p>
 <div id="camera-message" class="camera-message" hidden></div>
 
+<aside class="panel">
+<div class="panel-title">Limit One</div>
 <header class="top">
   <div class="stats">
     <div class="stat"><span id="bought-count" class="count">0</span><span id="bought-label" class="label">members bought</span></div>
@@ -31,6 +33,7 @@
   </div>
   <button id="open-list" class="round" type="button" aria-label="Purchase list">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg>
+    <span class="wide-label">Full list</span>
   </button>
 </header>
 <div id="notices" class="notices"></div>
@@ -47,6 +50,7 @@
   <div class="controls">
     <button id="torch" class="round" type="button" aria-label="Turn on light" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v4l-2 4v12h-4V10L8 6z"/></svg>
+      <span id="torch-label" class="wide-label">Light off</span>
     </button>
     <button id="type-number" class="primary" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
@@ -55,9 +59,15 @@
     <button id="sound" class="round" type="button" aria-label="Turn off sound">
       <svg id="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
       <svg id="sound-off" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+      <span id="sound-label" class="wide-label">Sound on</span>
     </button>
   </div>
 </footer>
+<section class="recent" aria-label="Newest first">
+  <h3>Newest first</h3>
+  <div id="recent-list"></div>
+</section>
+</aside>
 
 <div id="result" class="result" hidden role="alertdialog" aria-live="assertive"></div>
 
@@ -78,6 +88,12 @@
     </div>
     <input id="entry-input" class="entry-input" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Membership number" aria-label="Membership number">
     <p id="entry-hint" class="entry-hint"></p>
+    <div id="keypad" class="keypad" aria-label="Number pad">
+      <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+      <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+      <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+      <button type="button" data-key="clear" class="key-word">Clear</button><button type="button" data-key="0">0</button><button type="button" data-key="delete" aria-label="Delete">&#x232B;</button>
+    </div>
     <button id="entry-check" class="primary wide" value="check" type="submit" disabled>Check number</button>
   </form>
 </dialog>

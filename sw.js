@@ -1,6 +1,6 @@
 // Keeps Limit One working when the connection drops: everything is fetched from the network
 // when possible (so updates show up) and from this cache when not.
-const CACHE = "limitone-1";
+const CACHE = "limitone-2";
 const FILES = [
   "./",
   "index.html",

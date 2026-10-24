@@ -68,7 +68,38 @@ function render() {
   renderNotices();
   renderResult();
   renderLastResult();
+  renderRecent();
   if ($("list-sheet").open) renderList();
+}
+
+/** Wide screens (iPad) get the sidebar and the number pad. */
+const wide = matchMedia("(min-width: 700px)");
+wide.addEventListener("change", render);
+
+/** Everyone on the list, newest first, in the iPad sidebar. */
+let recentKey = "";
+function renderRecent() {
+  if (!wide.matches) return;
+  const key = `${log.entries.length}|${log.blockedCount}|${log.startedAt}`;
+  if (key === recentKey) return;
+  recentKey = key;
+  const list = $("recent-list");
+  if (!log.entries.length) {
+    list.innerHTML = '<p class="empty">No one yet. Members show up here as they\'re checked.</p>';
+    return;
+  }
+  list.replaceChildren(...[...log.entries].reverse().map((entry) => {
+    const row = document.createElement("div");
+    row.className = "entry";
+    const blocked = entry.blockedAttempts.length;
+    row.innerHTML = `
+      <div class="entry-main">
+        <div class="entry-number">${escapeHTML(entry.number)}</div>
+        <div class="entry-detail">${escapeHTML(timeOrDayAndTime(entry.loggedAt))}, ${entry.method === "scanned" ? "scanned" : "typed"}</div>
+      </div>
+      ${blocked ? `<span class="entry-blocked" aria-label="Turned away ${blocked} times">&#x2715; ${blocked}</span>` : ""}`;
+    return row;
+  }));
 }
 
 function renderNotices() {
@@ -234,6 +265,7 @@ function playFeedback(result) {
 function renderSound() {
   $("sound-on").hidden = !soundOn;
   $("sound-off").hidden = soundOn;
+  $("sound-label").textContent = soundOn ? "Sound on" : "Sound off";
   $("sound").setAttribute("aria-label", soundOn ? "Turn off sound" : "Turn on sound");
 }
 
@@ -356,6 +388,7 @@ async function scanLoop() {
 function setTorch(on) {
   torchOn = on;
   $("torch").setAttribute("aria-label", on ? "Turn off light" : "Turn on light");
+  $("torch-label").textContent = on ? "Light on" : "Light off";
   track?.applyConstraints({ advanced: [{ torch: on }] }).catch(() => {});
 }
 
@@ -412,9 +445,20 @@ entryInput.addEventListener("input", () => {
 $("type-number").addEventListener("click", () => {
   unlockAudio();
   entryInput.value = "";
+  // On an iPad the number pad replaces the on-screen keyboard (a hardware keyboard still works).
+  entryInput.inputMode = wide.matches ? "none" : "numeric";
   renderEntryHint();
   $("entry-sheet").showModal();
   entryInput.focus();
+});
+
+$("keypad").addEventListener("click", (event) => {
+  const key = event.target.closest("button")?.dataset.key;
+  if (!key) return;
+  if (key === "clear") entryInput.value = "";
+  else if (key === "delete") entryInput.value = entryInput.value.slice(0, -1);
+  else if (entryInput.value.length < 20) entryInput.value += key;
+  renderEntryHint();
 });
 
 $("entry-sheet").addEventListener("close", () => {
@@ -551,4 +595,5 @@ if (demo !== null) {
 }
 render();
 if (demo === "list") openList();
+if (demo === "entry") $("type-number").click();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});

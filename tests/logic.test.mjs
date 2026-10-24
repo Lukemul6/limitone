@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalize, PurchaseLog, ScanModel, Sightings, toCSV, csvFilename, UNDO_CLEAR_WINDOW } from "../logic.js";
+import { normalize, codeDigits, PurchaseLog, ScanModel, Sightings, toCSV, csvFilename, UNDO_CLEAR_WINDOW } from "../logic.js";
 
 const start = 1_793_000_000_000;
 const at = (seconds) => start + seconds * 1000;
@@ -25,6 +25,11 @@ test("reads the card barcode: 12 digits plus an EAN-13 check digit", () => {
   assert.equal(normalize("1118289953586"), "111828995358");
 });
 
+test("reads the number out of the app's QR code", () => {
+  // The same member's digital card in the Costco app.
+  assert.equal(normalize("960000111828995358000115992157"), "111828995358");
+});
+
 test("keeps a 13-digit code that isn't an EAN-13", () => {
   assert.equal(normalize("1118289953581"), "1118289953581");
 });
@@ -47,6 +52,29 @@ test("first check approves, second is a duplicate with the attempt recorded", ()
   assert.deepEqual(second.entry.blockedAttempts, [at(600)]);
   assert.equal(log.entries.length, 1);
   assert.equal(log.blockedCount, 1);
+});
+
+test("card and app QR code are the same member, in either order", () => {
+  const qr = "960000111828995358000115992157";
+  const cardFirst = new PurchaseLog(null, "k", start);
+  cardFirst.check(normalize("1118289953586"), "scanned", start, codeDigits("1118289953586"));
+  assert.equal(cardFirst.check(normalize(qr), "scanned", at(60), codeDigits(qr)).kind, "duplicate");
+
+  const qrFirst = new PurchaseLog(null, "k", start);
+  qrFirst.check(normalize(qr), "scanned", start, codeDigits(qr));
+  assert.equal(qrFirst.check(normalize("1118289953586"), "scanned", at(60), codeDigits("1118289953586")).kind, "duplicate");
+  assert.equal(qrFirst.entries.length, 1);
+});
+
+test("a code in a layout it doesn't know still matches a listed number inside it", () => {
+  const odd = "7700111828995358999";
+  const log = new PurchaseLog(null, "k", start);
+  log.check("111828995358", "scanned", start);
+  assert.equal(log.check(normalize(odd), "scanned", at(60), codeDigits(odd)).kind, "duplicate");
+
+  const reverse = new PurchaseLog(null, "k", start);
+  reverse.check(normalize(odd), "scanned", start, codeDigits(odd));
+  assert.equal(reverse.check("111828995358", "typed", at(60)).kind, "duplicate");
 });
 
 test("a removed member can buy again", () => {

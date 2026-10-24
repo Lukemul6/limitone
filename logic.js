@@ -11,10 +11,13 @@ export const UNDO_CLEAR_WINDOW = 60 * 60 * 1000;
 /**
  * The membership number in a scanned code or typed entry, or null if there isn't a usable one.
  *
- * A run of exactly 12 digits is the number. The card barcode is EAN-13, which reads as the
- * 12 digits plus a check digit, so a valid 13-digit EAN-13 loses its last digit. Anything else
- * uses its letters and digits as they are, so a code in some other format still gets a
- * consistent key.
+ * - A run of exactly 12 digits is the number.
+ * - The card barcode is EAN-13, which reads as the 12 digits plus a check digit, so a valid
+ *   13-digit EAN-13 loses its last digit.
+ * - The digital card in the Costco app is a QR code with a longer run: "96", four more digits,
+ *   the 12-digit number, then more digits (seen: 960000 111828995358 000115992157).
+ * - Anything else uses its letters and digits as they are, so a code in some other format
+ *   still gets a consistent key.
  */
 export function normalize(raw) {
   const text = String(raw ?? "");
@@ -23,8 +26,15 @@ export function normalize(raw) {
   if (exact) return exact;
   const ean = runs.find((run) => run.length === MEMBER_LENGTH + 1 && isValidEAN13(run));
   if (ean) return ean.slice(0, MEMBER_LENGTH);
+  const app = runs.find((run) => run.length >= 6 + MEMBER_LENGTH && run.startsWith("96"));
+  if (app) return app.slice(6, 6 + MEMBER_LENGTH);
   const cleaned = text.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
   return cleaned.length >= MIN_LENGTH ? cleaned : null;
+}
+
+/** All the digits in a scanned code, kept with the entry when there's more than the number. */
+export function codeDigits(raw) {
+  return String(raw ?? "").replace(/[^0-9]/g, "");
 }
 
 /** Whether the last of 13 digits is the EAN-13 check digit for the first 12. */
@@ -45,7 +55,10 @@ export class PurchaseLog {
   constructor(storage = null, key = "limitone.list", now = Date.now()) {
     this.storage = storage;
     this.key = key;
-    /** Oldest first. Each is { number, loggedAt, method: "scanned" | "typed", blockedAttempts: [] }. */
+    /**
+     * Oldest first. Each is { number, loggedAt, method: "scanned" | "typed", blockedAttempts: [],
+     * code? }, where `code` is the digits of a scanned code that held more than the number.
+     */
     this.entries = [];
     this.startedAt = now;
     /** The last list cleared, until it's brought back or the hour is up. */
@@ -67,18 +80,32 @@ export class PurchaseLog {
    * Checks a number and records the result: adds it if it's new, or logs a blocked attempt if
    * it's already there. Returns { kind: "approved" | "duplicate", entry }.
    */
-  check(number, method, now = Date.now()) {
+  check(number, method, now = Date.now(), code = null) {
     this.forgetExpiredClear(now);
-    const existing = this.entry(number);
+    const existing = this.findMember(number, code);
     if (existing) {
       existing.blockedAttempts.push(now);
       this.save();
       return { kind: "duplicate", entry: copy(existing) };
     }
     const entry = { number, loggedAt: now, method, blockedAttempts: [] };
+    if (code && code.length > MEMBER_LENGTH) entry.code = code;
     this.entries.push(entry);
     this.save();
     return { kind: "approved", entry: copy(entry) };
+  }
+
+  /**
+   * The member already on the list: by number, or by a code that contains a listed number (or
+   * a listed code that contains this number), in case a QR code is laid out differently from
+   * the one `normalize` knows.
+   */
+  findMember(number, code) {
+    const exact = this.entry(number);
+    if (exact) return exact;
+    return this.entries.find((entry) =>
+      (code && entry.number.length === MEMBER_LENGTH && /^[0-9]+$/.test(entry.number) && code.includes(entry.number)) ||
+      (entry.code && number.length === MEMBER_LENGTH && entry.code.includes(number))) ?? null;
   }
 
   remove(number) {
@@ -196,7 +223,7 @@ export class ScanModel {
     if (this.result && this.result.kind !== "approved") return;
     this.lastCheck = { number, showing, at: now };
     this.lastCheckSeenAt = now;
-    this.show(this.log.check(number, "scanned", now));
+    this.show(this.log.check(number, "scanned", now, codeDigits(raw)));
   }
 
   /** Whether the camera is still looking at the card it last checked. */

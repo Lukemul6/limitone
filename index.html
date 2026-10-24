@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Limit One">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<title>Limit One</title>
+</head>
+<body>
+
+<video id="camera" playsinline muted autoplay></video>
+<div id="frame" class="frame" aria-hidden="true">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+</div>
+<p id="hint" class="hint">Line up the barcode or QR code</p>
+<div id="camera-message" class="camera-message" hidden></div>
+
+<header class="top">
+  <div class="stats">
+    <div class="stat"><span id="bought-count" class="count">0</span><span id="bought-label" class="label">members bought</span></div>
+    <div class="stat" id="blocked-stat" hidden><span id="blocked-count" class="count red">0</span><span class="label">turned away</span></div>
+  </div>
+  <button id="open-list" class="round" type="button" aria-label="Purchase list">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg>
+  </button>
+</header>
+<div id="notices" class="notices"></div>
+
+<footer class="bottom">
+  <div id="last-result" class="last-result" hidden>
+    <span id="last-icon" class="last-icon"></span>
+    <div class="last-text">
+      <div id="last-number" class="last-number"></div>
+      <div id="last-detail" class="last-detail"></div>
+    </div>
+    <button id="last-undo" class="pill-button" type="button">Undo</button>
+  </div>
+  <div class="controls">
+    <button id="torch" class="round" type="button" aria-label="Turn on light" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v4l-2 4v12h-4V10L8 6z"/></svg>
+    </button>
+    <button id="type-number" class="primary" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+      Type number
+    </button>
+    <button id="sound" class="round" type="button" aria-label="Turn off sound">
+      <svg id="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+      <svg id="sound-off" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+    </button>
+  </div>
+</footer>
+
+<div id="result" class="result" hidden role="alertdialog" aria-live="assertive"></div>
+
+<div id="start" class="start">
+  <img src="icons/icon-512.png" alt="" width="112" height="112">
+  <h1>Limit One</h1>
+  <p>One purchase per member.</p>
+  <button id="start-button" class="primary" type="button">Start scanning</button>
+  <p class="small">Allow camera access when Safari asks.</p>
+</div>
+
+<dialog id="entry-sheet" class="sheet small-sheet">
+  <form method="dialog" id="entry-form">
+    <div class="sheet-bar">
+      <button value="cancel" class="text-button" type="submit" formnovalidate>Cancel</button>
+      <h2>Type number</h2>
+      <span></span>
+    </div>
+    <input id="entry-input" class="entry-input" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Membership number" aria-label="Membership number">
+    <p id="entry-hint" class="entry-hint"></p>
+    <button id="entry-check" class="primary wide" value="check" type="submit" disabled>Check number</button>
+  </form>
+</dialog>
+
+<dialog id="list-sheet" class="sheet">
+  <div class="sheet-bar">
+    <button id="export" class="text-button" type="button">Export</button>
+    <h2>Purchase list</h2>
+    <button id="close-list" class="text-button strong" type="button">Done</button>
+  </div>
+  <div class="sheet-body">
+    <div class="group">
+      <div class="row"><span>Members</span><span id="sum-members"></span></div>
+      <div class="row"><span>Turned away</span><span id="sum-blocked"></span></div>
+      <div class="row"><span>List started</span><span id="sum-started"></span></div>
+    </div>
+    <div class="group">
+      <button id="undo-clear" class="row-button blue" type="button" hidden></button>
+      <button id="clear-list" class="row-button red" type="button">Sold out? Clear the list</button>
+    </div>
+    <p id="clear-note" class="footnote"></p>
+    <input id="search" class="search" type="search" inputmode="numeric" placeholder="Search membership number" aria-label="Search membership number">
+    <div id="entries" class="group entries"></div>
+    <p id="entries-empty" class="empty" hidden></p>
+  </div>
+</dialog>
+
+<dialog id="confirm-sheet" class="alert">
+  <h3 id="confirm-title"></h3>
+  <p id="confirm-message"></p>
+  <div class="alert-buttons">
+    <button id="confirm-cancel" class="alert-button" type="button" autofocus>Cancel</button>
+    <button id="confirm-ok" class="alert-button red" type="button"></button>
+  </div>
+</dialog>
+
+<script src="vendor/zxing-reader.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

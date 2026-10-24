@@ -309,3 +309,40 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
   .small-sheet { width: 520px; height: fit-content; margin: auto; border-radius: 22px; padding-bottom: 20px; }
   .keypad { display: grid; }
 }
+
+/* Short and wide (a phone turned sideways): the sidebar scrolls, results and the keypad shrink to fit. */
+@media (min-width: 700px) and (max-height: 560px) {
+  .panel {
+    gap: 10px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 12px) 16px;
+  }
+  .panel-title { font-size: 20px; min-height: 36px; line-height: 36px; }
+  .top .round { top: calc(env(safe-area-inset-top) + 12px); right: calc(env(safe-area-inset-right) + 16px); height: 36px; }
+  .stat { padding: 10px 12px; }
+  .count { font-size: 30px; }
+  .primary { min-height: 50px; }
+  .recent { flex: none; }
+  #recent-list { overflow: visible; }
+
+  .result { gap: 8px; padding-top: calc(env(safe-area-inset-top) + 12px); padding-bottom: calc(env(safe-area-inset-bottom) + 12px); }
+  .result .big-icon { width: 64px; height: 64px; }
+  .result h2 { font-size: 40px; }
+  .result p { font-size: 17px; }
+  .result .number { font-size: 28px; margin-top: 2px; }
+  .result .times { font-size: 15px; }
+  .result .next { min-height: 48px; font-size: 19px; }
+
+  .small-sheet { width: min(760px, 94vw); }
+  #entry-form {
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; align-items: start;
+    grid-template-areas: "bar bar" "input keypad" "hint keypad" "check keypad";
+    padding: 0 20px;
+  }
+  #entry-form .sheet-bar { grid-area: bar; padding-left: 0; padding-right: 0; }
+  #entry-form .entry-input { grid-area: input; width: 100%; margin: 4px 0 0; }
+  #entry-form .entry-hint { grid-area: hint; margin: 10px 0; }
+  #entry-form .keypad { grid-area: keypad; margin: 0; gap: 8px; }
+  #entry-form .keypad button { min-height: 50px; font-size: 26px; }
+  #entry-form .keypad .key-word { font-size: 17px; }
+  #entry-form .primary.wide { grid-area: check; width: 100%; margin: 0; }
+}

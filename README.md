@@ -16,7 +16,7 @@ Once it has loaded it keeps working without a connection.
 
 The same as the iPhone app: scan or type a membership number, green **Approved** for a first purchase, flashing red **Duplicate purchase** with the time they bought if they're already on the list. The list, search, export, **Sold out? Clear the list** (with a confirmation, and an hour to bring it back) and Undo work the same way.
 
-- On an iPad (or any screen at least 700 points wide) the camera sits on the left and a sidebar on the right shows the counts, the last result, the controls and everyone on the list. Typing a number uses a large on-screen number pad. Phones keep the full-screen camera layout.
+- On an iPad (or any screen at least 700 points wide) the camera sits on the left and a sidebar on the right shows the counts, the last result, the controls and everyone on the list. Typing a number uses a large on-screen number pad. Phones keep the full-screen camera layout. Both work in either orientation; on a phone turned sideways the sidebar scrolls and the keypad sits beside the number.
 - The list is saved in this browser on this device only. Each device has its own list.
 - Nothing is sent anywhere. The page only loads its own files.
 - Barcodes are read with [zxing-wasm](https://github.com/Sec-ant/zxing-wasm) 3.1.6 (MIT, in `vendor/`), from the area inside the frame only.
